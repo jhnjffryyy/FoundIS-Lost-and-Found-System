@@ -33,39 +33,5 @@ css/styles.css      All styles
 js/data.js          Starting data: staff login, categories, the 10 default items
 js/app.js           App logic: routing, rendering, storage, actions
 assets/icons/       Favicons and app icons
-assets/images/      Logo, hero image, item photos (see items/CREDITS.txt)
-.nojekyll           Tells GitHub Pages to serve files as-is
+assets/images/      Logo, hero image, item photos
 ```
-
-## Run locally
-
-No build step and no dependencies. Open `index.html` in a browser, or serve the folder:
-
-```
-python -m http.server 8000
-```
-
-Then open http://localhost:8000.
-
-## Data
-
-| What | Where |
-|---|---|
-| Default items, categories, staff login | `js/data.js` |
-| Saved records (accounts, claims, reports, staff changes) | Browser localStorage, key `foundis-osa-v3` |
-
-To change the starting data, edit `js/data.js`. Then change `STORE_KEY` in `js/app.js` to a new version (for example `foundis-osa-v4`) and set the `removeItem` line below it to the old key. Browsers with older saved data then reset to the new starting data.
-
-To view or clear saved records in one browser: press `F12`, open **Application** > **Local Storage**, and select `foundis-osa-v3`.
-
-## Staff access
-
-The OSA staff sign-in is set in `js/data.js`. Because the site has no server, that file is public, so the password is not secret. Change it before sharing the link, and move to real server-side sign-in before real use.
-
-## Deploy
-
-GitHub Pages serves the `main` branch from the repository root. Push to `main` and the live site updates within a few minutes.
-
-## Credits
-
-Item photos are from Wikimedia Commons under free licenses. See `assets/images/items/CREDITS.txt`.
