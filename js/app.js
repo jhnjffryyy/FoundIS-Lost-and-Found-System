@@ -1522,10 +1522,6 @@
           <div><dt>Found at</dt><dd>${safe(item.location)}</dd></div>
           <div><dt>Turned over</dt><dd>${dateLabel(item.date)} &middot; ${daysLabel(item)}</dd></div>
         </dl>
-        <div class="item-dialog-notes">
-          <strong>Private verification notes</strong>
-          <p>${item.notes ? safe(item.notes) : "No notes recorded."}</p>
-        </div>
         <div class="item-dialog-actions">
           ${isPublic ? `<a class="btn btn-outline btn-small" href="#item/${encodeURIComponent(item.id)}" data-close-dialog>View public listing</a>` : ""}
           ${["available", "claimed"].includes(item.status) ? `<button class="btn btn-outline btn-small" data-action="archive-item" data-id="${safe(item.id)}">Archive</button>` : ""}
