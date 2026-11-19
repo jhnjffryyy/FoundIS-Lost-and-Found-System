@@ -30,14 +30,14 @@ FoundIS is a lost and found web app for the TUP Manila community, managed by the
 ```
 FoundIS-Lost-and-Found-System/
 ├── assets/
-│   ├── icons/
-│   └── images/
-│       └── items/
+│   ├── icons/                  # Favicons and home-screen icons
+│   └── images/                 # Logo, campus hero image
+│       └── items/              # Photos of the default found items
 ├── css/
-│   └── styles.css
+│   └── styles.css              # Site styles
 ├── js/
-│   ├── app.js
-│   └── data.js
-├── index.html
-└── README.md 
+│   ├── app.js                  # Routing, rendering, storage, and actions
+│   └── data.js                 # Starting data: staff login, categories, default items
+├── index.html                  # Page shell that loads css/ and js/
+└── README.md                   # This file
 ```
