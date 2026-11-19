@@ -33,5 +33,5 @@ css/styles.css      All styles
 js/data.js          Starting data: staff login, categories, the 10 default items
 js/app.js           App logic: routing, rendering, storage, actions
 assets/icons/       Favicons and app icons
-assets/images/      Logo, hero image, item photos
+assets/images/      Logo, hero image, item photos 
 ```
