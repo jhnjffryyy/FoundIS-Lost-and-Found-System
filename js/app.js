@@ -367,10 +367,12 @@
     const links =
       session && session.role === "staff"
         ? `<span class="nav-indicator" aria-hidden="true"></span><a href="#admin" data-nav="admin">Dashboard</a><a href="#browse" data-nav="browse">Public catalog</a>`
-        : `<span class="nav-indicator" aria-hidden="true"></span><a href="#home" data-nav="home">Home</a>
+        : session
+          ? `<span class="nav-indicator" aria-hidden="true"></span><a href="#home" data-nav="home">Home</a>
        <a href="#browse" data-nav="browse">Browse items</a>
        <a href="#report" data-nav="report">Report lost</a>
-       <a href="#track" data-nav="track">Track claim</a>`;
+       <a href="#track" data-nav="track">Track claim</a>`
+          : ""; // signed-out visitors only ever see the sign-in page
     const authControls = session
       ? `<span class="user-chip" title="Signed in as ${session.role === "staff" ? "OSA Staff" : safe(session.username)}">${session.role === "staff" ? ICON.shield : ICON.grad}<span>${session.role === "staff" ? "OSA Staff" : safe(session.username)}</span></span>
        <button class="btn btn-ghost btn-small" type="button" data-action="logout">${ICON.logout} Sign out</button>`
@@ -528,16 +530,21 @@
       }
     </div>`;
   }
+  // every typed word must match the start of a word in the title, category, location or description,
+  // so "cie" finds "CIE Building" but not "Scientific" or "College of Science"
+  function matchesSearch(item, query) {
+    const words = query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+    if (!words.length) return true;
+    const hay = `${item.title} ${item.category} ${item.location} ${item.description}`.toLowerCase().split(/[^a-z0-9]+/);
+    return words.every((w) => hay.some((h) => h.startsWith(w)));
+  }
   function renderBrowse() {
     if (!categoryFilters().includes(category)) category = "All";
     const q = searchTerm.toLowerCase().trim();
     const items = publicItems()
       .filter((item) => {
         if (category !== "All" && item.category !== category) return false;
-        if (!q) return true;
-        const hay =
-          `${item.title} ${item.category} ${item.location} ${item.description}`.toLowerCase();
-        return hay.includes(q);
+        return matchesSearch(item, q);
       })
       .sort((a, b) =>
         sortOrder === "oldest"
@@ -595,7 +602,7 @@
     } else if (session && session.role === "student") {
       claimCta = `<a class="btn btn-primary" style="min-height:48px;padding:12px 24px;" href="#claim/${encodeURIComponent(item.id)}">This might be mine ${ICON.arrowRight}</a>`;
     } else if (session && session.role === "staff") {
-      claimCta = `<div class="notice soft-stone">${ICON.info}<div>Signed in as OSA Staff. Manage claims for this item from the <a href="#admin" style="color:var(--red);font-weight:700;text-decoration:underline;">Admin Workspace</a>.</div></div>`;
+      claimCta = "";
     } else {
       claimCta = `
       <div class="notice soft-red" style="flex-direction:column;gap:12px;">
@@ -1619,6 +1626,8 @@
     return true;
   }
   function render() {
+    // the site opens on sign in; every other page needs a student or staff session
+    if (!getSession() && !location.hash.startsWith("#login")) history.replaceState(null, "", "#login");
     const route = decodeURIComponent(location.hash.slice(1) || "home");
     const [page, id] = route.split("/");
     const pageKey = page || "home";
@@ -1629,6 +1638,18 @@
     lastPage = pageKey;
     document.title = `${PAGE_TITLES[pageKey] || "FoundIS"} | FoundIS`;
     renderHeader();
+    // footer links stay visible with their hover; staff can't use any, signed-in students can't use "sign in"
+    const role = getSession()?.role;
+    document.querySelectorAll(".footer-links a").forEach((link) => {
+      const off = role === "staff" || (role === "student" && link.getAttribute("href") === "#login");
+      if (off) {
+        link.setAttribute("aria-disabled", "true");
+        link.setAttribute("tabindex", "-1");
+      } else {
+        link.removeAttribute("aria-disabled");
+        link.removeAttribute("tabindex");
+      }
+    });
     if (page === "login") app.innerHTML = renderLogin();
     else if (page === "browse") app.innerHTML = renderBrowse();
     else if (page === "item") app.innerHTML = renderDetail(id);
@@ -2106,11 +2127,23 @@
       }
       return;
     }
+    if (event.target.closest('.footer-links a[aria-disabled="true"]')) {
+      event.preventDefault();
+      return;
+    }
     const brandLink = event.target.closest("a.brand");
     if (brandLink) {
       event.preventDefault();
       const home = getSession()?.role === "staff" ? "admin" : "home";
-      if (location.hash === "#" + home || (home === "home" && location.hash === "")) {
+      // on sign up, the logo goes back to sign in (same swap as the "Sign in" link)
+      if (location.hash.startsWith("#login") && authMode === "signup") {
+        authMode = "signin";
+        if (!swapAuthPanel()) render();
+        window.scrollTo(0, 0);
+        return;
+      }
+      // already on this page (or on sign in / sign up): just go back to the top
+      if (location.hash === "#" + home || location.hash.startsWith("#login") || (home === "home" && location.hash === "")) {
         window.scrollTo({
           top: 0,
           behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
@@ -2281,6 +2314,13 @@
     document
       .getElementById("mobileToggle")
       .setAttribute("aria-expanded", String(open));
+  });
+  // the search box's X (or deleting all text) drops the search filter right away
+  document.addEventListener("input", (event) => {
+    if (!event.target.matches('#catalogSearch input[name="query"]') || event.target.value || !searchTerm) return;
+    searchTerm = "";
+    render();
+    document.querySelector('#catalogSearch input[name="query"]')?.focus();
   });
   document.getElementById("year").textContent = new Date().getFullYear();
   window.addEventListener("hashchange", render);

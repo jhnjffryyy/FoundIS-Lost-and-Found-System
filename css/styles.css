@@ -2329,3 +2329,6 @@ footer h4 {
   gap: 8px;
   margin-top: 18px;
 }
+.footer-links a[aria-disabled="true"] {
+  cursor: default;
+}
